@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>邻水县钟水饺 · 百年传承一碗情</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --red: #8B1A1A;
+            --gold: #D4A843;
+            --cream: #F5F0E8;
+            --brown: #3E2723;
+            --paper: #FAF7F2;
+            --gray: #6D5E54;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--cream);
+            color: var(--brown);
+            overflow-x: hidden;
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress-bar {
+            position: fixed; top:0; left:0; height: 3px;
+            background: linear-gradient(90deg, var(--red), var(--gold));
+            z-index: 999; transition: width 0.3s;
+        }
+
+        /* ===== LOADING ===== */
+        .loader {
+            position: fixed; inset:0; background: var(--cream);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999; transition: opacity .6s, visibility .6s;
+        }
+        .loader.hide { opacity:0; visibility: hidden; }
+        .loader-steam {
+            width: 60px; height: 60px; position: relative;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .loader-steam .bowl {
+            width: 50px; height: 30px;
+            background: var(--gold); border-radius: 0 0 25px 25px; position: relative;
+        }
+        .loader-steam .bowl::before {
+            content:''; position:absolute; top:-8px; left:-4px; width:58px; height:10px;
+            background: var(--brown); border-radius: 6px; opacity:.15;
+        }
+        .loader-steam span {
+            position: absolute; top: -20px; font-size: 14px; opacity: 0;
+            animation: rise 1.2s ease-in-out infinite;
+        }
+        .loader-steam span:nth-child(1) { left: 10px; animation-delay: 0s; }
+        .loader-steam span:nth-child(2) { left: 25px; animation-delay: .3s; }
+        .loader-steam span:nth-child(3) { left: 40px; animation-delay: .6s; }
+        @keyframes rise {
+            0% { opacity:0; transform: translateY(0); }
+            50% { opacity:.6; }
+            100% { opacity:0; transform: translateY(-20px); }
+        }
+        .loader p { margin-top:20px; font-size:13px; color:var(--gray); letter-spacing:3px; }
+
+        /* ===== SCENE 1: DOOR ===== */
+        .scene-door {
+            height: 100vh; min-height: 600px;
+            display: flex; align-items: center; justify-content: center;
+            position: relative; overflow: hidden;
+        }
+        .doors {
+            position: absolute; inset:0; display: flex; z-index:10; pointer-events:none;
+        }
+        .d {
+            width:50%; height:100%; background: var(--red); position:relative;
+            transition: transform 1s cubic-bezier(.77,0,.175,1);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .d-l { transform-origin: left; border-right: 2px solid var(--gold); }
+        .d-r { transform-origin: right; border-left: 2px solid var(--gold); }
+        .d-l.open { transform: perspective(800px) rotateY(-90deg); }
+        .d-r.open { transform: perspective(800px) rotateY(90deg); }
+        .d .txt {
+            font-family:'Noto Serif SC',serif; font-size:clamp(50px,12vw,110px);
+            font-weight:900; color:var(--gold); writing-mode:vertical-rl; letter-spacing:.2em;
+        }
+        .d-l .txt { margin-right:15px; }
+        .d-r .txt { margin-left:15px; }
+
+        .door-content {
+            position: relative; z-index:1; text-align:center; padding:20px;
+        }
+        .door-content .badge {
+            display:inline-block; padding:5px 18px; border:1px solid var(--gold);
+            color:var(--gold); font-size:11px; letter-spacing:3px; margin-bottom:25px;
+            font-family:'Noto Serif SC',serif;
+        }
+        .door-content h1 {
+            font-family:'Noto Serif SC',serif; font-size:clamp(28px,8vw,64px);
+            font-weight:900; color:var(--red); margin-bottom:10px;
+        }
+        .door-content .sub {
+            font-family:'Noto Serif SC',serif; font-size:clamp(14px,3vw,20px);
+            color:var(--gray); letter-spacing:4px; margin-bottom:35px;
+        }
+        .door-content .line { width:50px; height:2px; background:var(--gold); margin:0 auto 30px; }
+        .door-content .year { font-size:13px; color:var(--gray); letter-spacing:2px; }
+        .door-content .year b { color:var(--red); font-size:16px; }
+
+        .scroll-tip {
+            position:absolute; bottom:30px; left:50%; transform:translateX(-50%);
+            z-index:20; color:#fff; font-size:12px; letter-spacing:2px;
+            animation: float 2s ease-in-out infinite;
+        }
+        .scroll-tip::after { content:'↓'; display:block; font-size:18px; margin-top:4px; }
+        @keyframes float {
+            0%,100% { transform:translateX(-50%) translateY(0); }
+            50% { transform:translateX(-50%) translateY(-8px); }
+        }
+
+        /* ===== SCENE 2: DRAG BOIL ===== */
+        .scene-boil {
+            min-height: 100vh; padding: 60px 20px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative;
+        }
+        .scene-boil .tag {
+            font-size:11px; color:var(--gold); letter-spacing:3px; margin-bottom:10px;
+            font-family:'Noto Serif SC',serif;
+        }
+        .scene-boil h2 {
+            font-family:'Noto Serif SC',serif; font-size:clamp(20px,5vw,32px);
+            color:var(--red); margin-bottom:15px; text-align:center;
+        }
+        .scene-boil .hint {
+            font-size:13px; color:var(--gray); margin-bottom:30px; text-align:center;
+        }
+
+        .pot-area {
+            width: 100%; max-width: 360px; height: 320px;
+            position: relative; user-select: none; touch-action: none;
+        }
+        .pot {
+            position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 260px; height: 140px;
+            background: #555; border-radius: 0 0 30px 30px;
+            border: 4px solid #444; border-top: 6px solid #666;
+        }
+        .pot::before {
+            content:''; position:absolute; top:-12px; left:-20px; width:300px; height:14px;
+            background: #777; border-radius: 7px;
+        }
+        .pot-rim {
+            position:absolute; top:-20px; left:50%; transform:translateX(-50%);
+            width: 280px; height: 16px;
+            background: linear-gradient(180deg, #888, #666); border-radius: 8px;
+        }
+        .water {
+            position:absolute; top:10px; left:10px; right:10px; bottom:10px;
+            background: rgba(180,140,60,0.3); border-radius: 0 0 26px 26px;
+            overflow: hidden; transition: background 1s;
+        }
+        .water.boiling {
+            background: rgba(200,160,80,0.5);
+        }
+        .bubble {
+            position:absolute; border-radius:50%; background:rgba(255,255,255,0.4);
+            animation: bubbleUp 1.5s ease-in infinite;
+        }
+        @keyframes bubbleUp {
+            0% { opacity:.8; transform:translateY(0) scale(1); }
+            100% { opacity:0; transform:translateY(-80px) scale(.3); }
+        }
+
+        /* Dumplings */
+        .dumpling-tray {
+            position:absolute; top:-10px; left:50%; transform:translateX(-50%);
+            display: flex; gap: 8px; z-index: 5;
+        }
+        .dumpling {
+            width: 44px; height: 32px; background: var(--cream);
+            border-radius: 22px 22px 8px 8px; position:relative; cursor: grab;
+            box-shadow: 0 2px 6px rgba(0,0,0,.15); transition: transform .15s, box-shadow .15s;
+            border: 2px solid #e8ddd0;
+        }
+        .dumpling::before {
+            content:''; position:absolute; top:-4px; left:8px; right:8px; height:8px;
+            background: #ddd; border-radius: 6px;
+        }
+        .dumpling:active { cursor:grabbing; }
+        .dumpling.dragging { transform:scale(1.15) rotate(-5deg); box-shadow:0 8px 20px rgba(0,0,0,.2); z-index:100; }
+
+        .dumpling.in-pot {
+            position:absolute; animation: cook .8s ease forwards;
+        }
+        @keyframes cook {
+            0% { transform:scale(1); }
+            50% { transform:scale(1.1) rotate(10deg); }
+            100% { transform:scale(.9); opacity:.6; }
+        }
+
+        /* Steam on hover pot */
+        .steam-container {
+            position:absolute; top:-60px; left:50%; transform:translateX(-50%);
+            width:100px; height:50px; pointer-events:none; opacity:0;
+            transition: opacity .5s;
+        }
+        .steam-container.show { opacity:1; }
+        .steam-puff {
+            position:absolute; bottom:0; border-radius:50%;
+            background:rgba(255,255,255,.15);
+            animation: puff 2s ease-in-out infinite;
+        }
+        @keyframes puff {
+            0% { transform:scale(.5) translateY(0); opacity:.5; }
+            100% { transform:scale(1.5) translateY(-40px); opacity:0; }
+        }
+
+        .drop-count {
+            margin-top:25px; text-align:center; font-size:14px; color:var(--gray);
+        }
+        .drop-count b { color:var(--red); font-size:22px; }
+
+        /* ===== SCENE 3: FLIP CARDS ===== */
+        .scene-cards {
+            min-height:100vh; padding:60px 20px;
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+        }
+        .scene-cards .tag { font-size:11px; color:var(--gold); letter-spacing:3px; margin-bottom:10px; font-family:'Noto Serif SC',serif; }
+        .scene-cards h2 { font-family:'Noto Serif SC',serif; font-size:clamp(20px,5vw,32px); color:var(--red); margin-bottom:10px; text-align:center; }
+        .scene-cards .hint { font-size:13px; color:var(--gray); margin-bottom:30px; text-align:center; }
+
+        .flip-grid {
+            display:grid; grid-template-columns:repeat(2,1fr); gap:15px;
+            max-width:380px; width:100%;
+        }
+        .flip-card {
+            height: 160px; perspective:600px; cursor:pointer;
+        }
+        .flip-inner {
+            width:100%; height:100%; position:relative;
+            transition: transform .6s; transform-style: preserve-3d;
+        }
+        .flip-card.flipped .flip-inner { transform: rotateY(180deg); }
+        .flip-front, .flip-back {
+            position:absolute; inset:0; border-radius:14px;
+            backface-visibility:hidden; display:flex; flex-direction:column;
+            align-items:center; justify-content:center; padding:15px;
+        }
+        .flip-front {
+            background: var(--red); color:var(--gold); font-size:36px;
+        }
+        .flip-front span {
+            font-family:'Noto Serif SC',serif; font-size:13px;
+            margin-top:8px; letter-spacing:2px;
+        }
+        .flip-back {
+            background:var(--paper); border:1px solid rgba(212,168,67,.25);
+            transform: rotateY(180deg); text-align:center;
+        }
+        .flip-back h3 {
+            font-family:'Noto Serif SC',serif; font-size:15px;
+            color:var(--red); margin-bottom:6px;
+        }
+        .flip-back p { font-size:12px; color:var(--gray); line-height:1.5; }
+
+        /* ===== SCENE 3: HISTORY ===== */
+        .scene-history {
+            min-height:100vh; padding:60px 20px;
+            background:var(--brown); color:var(--cream);
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            position:relative;
+        }
+        .scene-history .tag { color:var(--gold); }
+        .scene-history h2 { color:var(--gold); }
+
+        .timeline-mini {
+            max-width:340px; width:100%; position:relative; padding-left:28px;
+        }
+        .timeline-mini::before {
+            content:''; position:absolute; left:5px; top:0; bottom:0;
+            width:2px; background:var(--gold);
+        }
+        .tl-item {
+            position:relative; margin-bottom:28px;
+            opacity:0; transform:translateY(15px);
+            transition:all .5s ease;
+        }
+        .tl-item.vis { opacity:1; transform:translateY(0); }
+        .tl-dot {
+            position:absolute; left:-25px; top:3px;
+            width:12px; height:12px; border-radius:50%;
+            background:var(--red); border:2px solid var(--gold);
+        }
+        .tl-year {
+            font-family:'Noto Serif SC',serif; font-size:16px;
+            font-weight:700; color:var(--gold); margin-bottom:4px;
+        }
+        .tl-text {
+            font-size:13px; color:rgba(245,240,232,.7); line-height:1.6;
+        }
+
+        /* ===== SCENE 5: WHEEL ===== */
+        .scene-wheel {
+            min-height:100vh; padding:60px 20px;
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+        }
+        .scene-wheel .tag { font-size:11px; color:var(--gold); letter-spacing:3px; margin-bottom:10px; font-family:'Noto Serif SC',serif; }
+        .scene-wheel h2 { font-family:'Noto Serif SC',serif; font-size:clamp(20px,5vw,32px); color:var(--red); margin-bottom:10px; text-align:center; }
+        .scene-wheel .hint { font-size:13px; color:var(--gray); margin-bottom:25px; text-align:center; }
+
+        .wheel-wrap {
+            position:relative; width:280px; height:280px; margin:0 auto 20px;
+        }
+        .wheel {
+            width:280px; height:280px; border-radius:50%; position:relative;
+            border: 4px solid var(--gold);
+            box-shadow: 0 0 0 8px var(--cream), 0 0 0 10px var(--gold), 0 8px 30px rgba(0,0,0,.15);
+            overflow:hidden; transition: transform 3s cubic-bezier(.17,.67,.12,.99);
+        }
+        .wheel {
+            background: conic-gradient(
+                #8B1A1A 0deg 60deg,
+                var(--gold) 60deg 120deg,
+                #5C1010 120deg 180deg,
+                var(--gold) 180deg 240deg,
+                #8B1A1A 240deg 300deg,
+                #5C1010 300deg 360deg
+            );
+        }
+        .wheel-seg {
+            position:absolute; top:50%; left:50%;
+            width:1px; height:1px;
+            transform-origin: 0 0;
+        }
+        .wheel-seg .seg-text {
+            position:absolute;
+            font-family:'Noto Serif SC',serif; font-size:13px; font-weight:700;
+            text-shadow:1px 1px 3px rgba(0,0,0,.3);
+            white-space:nowrap; pointer-events:none;
+            transform: translate(-50%,-50%);
+        }
+        .wheel-seg:nth-child(1) { transform:rotate(30deg); }
+        .wheel-seg:nth-child(1) .seg-text { top:-70px; left:40px; color:var(--cream); }
+        .wheel-seg:nth-child(2) { transform:rotate(90deg); }
+        .wheel-seg:nth-child(2) .seg-text { top:-70px; left:40px; color:var(--brown); }
+        .wheel-seg:nth-child(3) { transform:rotate(150deg); }
+        .wheel-seg:nth-child(3) .seg-text { top:-70px; left:40px; color:var(--cream); }
+        .wheel-seg:nth-child(4) { transform:rotate(210deg); }
+        .wheel-seg:nth-child(4) .seg-text { top:-70px; left:40px; color:var(--brown); }
+        .wheel-seg:nth-child(5) { transform:rotate(270deg); }
+        .wheel-seg:nth-child(5) .seg-text { top:-70px; left:40px; color:var(--cream); }
+        .wheel-seg:nth-child(6) { transform:rotate(330deg); }
+        .wheel-seg:nth-child(6) .seg-text { top:-70px; left:40px; color:var(--cream); }
+        .wheel-center {
+            position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+            width:60px; height:60px; border-radius:50%;
+            background:var(--paper); border:3px solid var(--gold);
+            display:flex; align-items:center; justify-content:center;
+            font-size:28px; z-index:5; cursor:pointer;
+            box-shadow:0 2px 10px rgba(0,0,0,.15);
+            transition:transform .2s;
+        }
+        .wheel-center:hover { transform:translate(-50%,-50%) scale(1.1); }
+        .wheel-pointer {
+            position:absolute; top:-8px; left:50%; transform:translateX(-50%);
+            width:0; height:0;
+            border-left:12px solid transparent; border-right:12px solid transparent;
+            border-top:20px solid var(--red); z-index:6;
+            filter:drop-shadow(0 2px 3px rgba(0,0,0,.3));
+        }
+
+        .wheel-result {
+            height:60px; display:flex; align-items:center; justify-content:center;
+            font-family:'Noto Serif SC',serif; font-size:18px; color:var(--red);
+            opacity:0; transition:opacity .5s;
+        }
+        .wheel-result.show { opacity:1; }
+
+        /* ===== SCENE 6: STORE ===== */
+        .scene-store {
+            min-height:60vh; padding:60px 20px; text-align:center;
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+        }
+        .scene-store .tag { font-size:11px; color:var(--gold); letter-spacing:3px; margin-bottom:10px; font-family:'Noto Serif SC',serif; }
+        .scene-store h2 { font-family:'Noto Serif SC',serif; font-size:clamp(20px,5vw,28px); color:var(--red); margin-bottom:25px; }
+        .store-info {
+            font-size:14px; color:var(--gray); line-height:2.2; margin-bottom:30px;
+        }
+        .store-qr {
+            width:160px; height:160px; background:white; border-radius:12px;
+            margin:0 auto; display:flex; flex-direction:column;
+            align-items:center; justify-content:center;
+            border:2px solid var(--gold); color:var(--gray); font-size:12px;
+            padding:10px; box-shadow: 0 4px 15px rgba(0,0,0,.08);
+        }
+        .store-qr:hover { border-color:var(--red); box-shadow: 0 4px 20px rgba(139,26,26,.15); }
+        .store-qr img { width:120px; height:120px; }
+
+        footer {
+            text-align:center; padding:25px 20px; background:var(--brown);
+            color:rgba(245,240,232,.4); font-size:11px; letter-spacing:2px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media(max-width:480px){
+            .flip-grid { grid-template-columns:1fr 1fr; gap:10px; }
+            .flip-card { height:140px; }
+            .wheel-wrap { width:240px; height:240px; }
+            .wheel { width:240px; height:240px; }
+        }
+
+        /* ===== REVEAL ===== */
+        .reveal { opacity:0; transform:translateY(25px); transition:all .7s; }
+        .reveal.vis { opacity:1; transform:translateY(0); }
+    </style>
+</head>
+<body>
+
+    <div class="progress-bar" id="progress"></div>
+
+    <!-- LOADER -->
+    <div class="loader" id="loader">
+        <div class="loader-steam">
+            <span>~</span><span>~</span><span>~</span>
+            <div class="bowl"></div>
+        </div>
+        <p>热气腾腾 即将出炉</p>
+    </div>
+
+    <!-- ===== SCENE 1: OPEN DOOR ===== -->
+    <div class="scene-door" id="sceneDoor">
+        <div class="doors">
+            <div class="d d-l" id="dL"><span class="txt">钟</span></div>
+            <div class="d d-r" id="dR"><span class="txt">饺</span></div>
+        </div>
+        <div class="scroll-tip" id="scrollTip">向下滑动 开启味道</div>
+        <div class="door-content">
+            <div class="badge">中华老字号 · 始于1893</div>
+            <h1>邻水县钟水饺</h1>
+            <p class="sub">百年传承一碗情</p>
+            <div class="line"></div>
+            <p class="year">从成都荔枝巷到邻水街头 <b>|</b> 三代人的坚守</p>
+        </div>
+    </div>
+
+    <!-- ===== SCENE 2: DROP DUMPLINGS ===== -->
+    <div class="scene-boil" id="sceneBoil">
+        <div class="tag reveal">壹 · 下饺子</div>
+        <h2 class="reveal">拖动饺子，下锅煮</h2>
+        <p class="hint reveal">试试把饺子拖进锅里 ↓</p>
+        <div class="pot-area reveal" id="potArea">
+            <div class="steam-container" id="steamBox">
+                <div class="steam-puff" style="left:20px;width:20px;height:20px;animation-delay:0s"></div>
+                <div class="steam-puff" style="left:50px;width:16px;height:16px;animation-delay:.5s"></div>
+                <div class="steam-puff" style="left:75px;width:22px;height:22px;animation-delay:1s"></div>
+            </div>
+            <div class="dumpling-tray" id="dumplingTray">
+                <div class="dumpling" data-id="1"></div>
+                <div class="dumpling" data-id="2"></div>
+                <div class="dumpling" data-id="3"></div>
+                <div class="dumpling" data-id="4"></div>
+                <div class="dumpling" data-id="5"></div>
+                <div class="dumpling" data-id="6"></div>
+            </div>
+            <div class="pot">
+                <div class="pot-rim"></div>
+                <div class="water" id="potWater">
+                    <div class="bubble" style="width:8px;height:8px;left:20%;bottom:10px;animation-delay:0s;display:none"></div>
+                    <div class="bubble" style="width:6px;height:6px;left:50%;bottom:5px;animation-delay:.5s;display:none"></div>
+                    <div class="bubble" style="width:10px;height:10px;left:70%;bottom:15px;animation-delay:1s;display:none"></div>
+                </div>
+            </div>
+        </div>
+        <div class="drop-count reveal">已下锅 <b id="dumplingCount">0</b> / 6 只</div>
+    </div>
+
+    <!-- ===== SCENE 3: FLIP CARDS ===== -->
+    <div class="scene-cards" id="sceneCards">
+        <div class="tag reveal">贰 · 看门道</div>
+        <h2 class="reveal">点击卡片，揭开秘密</h2>
+        <p class="hint reveal">点一下翻过来看</p>
+        <div class="flip-grid">
+            <div class="flip-card reveal" onclick="this.classList.toggle('flipped')">
+                <div class="flip-inner">
+                    <div class="flip-front">🥣<span>红油</span></div>
+                    <div class="flip-back">
+                        <h3>灵魂红油</h3>
+                        <p>红糖+八角+桂皮<br>小火慢熬3小时<br>浓稠挂壁才算好</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flip-card reveal" onclick="this.classList.toggle('flipped')">
+                <div class="flip-inner">
+                    <div class="flip-front">🤏<span>包制</span></div>
+                    <div class="flip-back">
+                        <h3>十二道褶</h3>
+                        <p>每只捏12道褶<br>形如半月<br>一斤面出60只</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flip-card reveal" onclick="this.classList.toggle('flipped')">
+                <div class="flip-inner">
+                    <div class="flip-front">🌾<span>和面</span></div>
+                    <div class="flip-back">
+                        <h3>三光标准</h3>
+                        <p>手光·盆光·面光<br>醒面半小时<br>面皮才够筋道</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flip-card reveal" onclick="this.classList.toggle('flipped')">
+                <div class="flip-inner">
+                    <div class="flip-front">🥩<span>调馅</span></div>
+                    <div class="flip-back">
+                        <h3>七三比例</h3>
+                        <p>七分瘦三分肥<br>猪后腿肉<br>只加姜和盐</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== SCENE 4: HISTORY ===== -->
+    <div class="scene-history" id="sceneHistory">
+        <div class="tag reveal">叁 · 百年故事</div>
+        <h2 class="reveal">一碗水饺的旅程</h2>
+        <p class="hint reveal" style="color:rgba(245,240,232,.5);margin-bottom:35px">向下滑动慢慢看</p>
+        <div class="timeline-mini">
+            <div class="tl-item">
+                <div class="tl-dot"></div>
+                <div class="tl-year">1893</div>
+                <div class="tl-text">钟燮森在成都荔枝巷摆摊卖水饺，皮薄馅嫩，一勺红油让食客排起长队。</div>
+            </div>
+            <div class="tl-item">
+                <div class="tl-dot"></div>
+                <div class="tl-year">1931</div>
+                <div class="tl-text">挂出"荔枝巷钟水饺"招牌，成为成都名小吃代表。</div>
+            </div>
+            <div class="tl-item">
+                <div class="tl-dot"></div>
+                <div class="tl-year">1995</div>
+                <div class="tl-text">被授予"中华老字号"，与龙抄手齐名。</div>
+            </div>
+            <div class="tl-item">
+                <div class="tl-dot"></div>
+                <div class="tl-year">至今</div>
+                <div class="tl-text">第三代传人来到邻水，老味道，新故事。</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== SCENE 5: WHEEL ===== -->
+    <div class="scene-wheel" id="sceneWheel">
+        <div class="tag reveal">肆 · 转一盘</div>
+        <h2 class="reveal">转一转，今天吃什么</h2>
+        <p class="hint reveal">点击中间按钮开始</p>
+        <div class="wheel-wrap reveal">
+            <div class="wheel-pointer"></div>
+            <div class="wheel" id="wheel">
+                <div class="wheel-seg"><span class="seg-text">红油水饺</span></div>
+                <div class="wheel-seg"><span class="seg-text">清汤水饺</span></div>
+                <div class="wheel-seg"><span class="seg-text">红油抄手</span></div>
+                <div class="wheel-seg"><span class="seg-text">钟水饺拼盘</span></div>
+                <div class="wheel-seg"><span class="seg-text">复制酱油</span></div>
+                <div class="wheel-seg"><span class="seg-text">再来一碗</span></div>
+            </div>
+            <div class="wheel-center" id="spinBtn" onclick="spinWheel()">🎲</div>
+        </div>
+        <div class="wheel-result" id="wheelResult"></div>
+    </div>
+
+    <!-- ===== SCENE 6: STORE ===== -->
+    <div class="scene-store" id="sceneStore">
+        <div class="tag reveal">伍 · 寻味而来</div>
+        <h2 class="reveal">邻水县钟水饺</h2>
+        <div class="store-info reveal">
+            📍 四川省广安市邻水县 [具体街道请填入]<br>
+            🕐 每日 07:00 - 21:00<br>
+            📞 [电话号码请填入]
+        </div>
+        <div class="store-qr reveal" id="qrArea">
+            <img src="data:image/png;base64,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" alt="钟水饺二维码" />
+            <span>扫码了解更多</span>
+        </div>
+    </div>
+
+    <footer>邻水县钟水饺 · 始于1893 · 中华老字号</footer>
+
+<script>
+// ===== LOADER =====
+window.addEventListener('load', () => {
+    setTimeout(() => document.getElementById('loader').classList.add('hide'), 1000);
+});
+
+// ===== PROGRESS BAR =====
+window.addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+    document.getElementById('progress').style.width = pct + '%';
+});
+
+// ===== DOOR =====
+let doorOpen = false;
+function openDoors() {
+    if (doorOpen) return;
+    doorOpen = true;
+    document.getElementById('dL').classList.add('open');
+    document.getElementById('dR').classList.add('open');
+    const tip = document.getElementById('scrollTip');
+    tip.style.opacity = '0';
+    setTimeout(() => tip.style.display = 'none', 400);
+}
+window.addEventListener('scroll', () => { if (scrollY > 30) openDoors(); });
+document.addEventListener('touchstart', openDoors, { once:true });
+document.addEventListener('click', openDoors, { once:true });
+
+// ===== REVEAL =====
+const obs = new IntersectionObserver(es => {
+    es.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
+}, { threshold:.15 });
+document.querySelectorAll('.reveal, .tl-item').forEach(el => obs.observe(el));
+
+// ===== DRAG DUMPLINGS =====
+(function() {
+    const tray = document.getElementById('dumplingTray');
+    const pot = document.querySelector('.pot');
+    const water = document.getElementById('potWater');
+    const steamBox = document.getElementById('steamBox');
+    let count = 0;
+    let dragging = null, offX = 0, offY = 0;
+
+    function startDrag(e) {
+        const d = e.target.closest('.dumpling');
+        if (!d) return;
+        e.preventDefault();
+        dragging = d;
+        const rect = d.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        offX = clientX - rect.left;
+        offY = clientY - rect.top;
+        d.classList.add('dragging');
+        d.style.position = 'fixed';
+        d.style.left = rect.left + 'px';
+        d.style.top = rect.top + 'px';
+        d.style.zIndex = 100;
+    }
+
+    function moveDrag(e) {
+        if (!dragging) return;
+        e.preventDefault();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        dragging.style.left = (clientX - offX) + 'px';
+        dragging.style.top = (clientY - offY) + 'px';
+    }
+
+    function endDrag(e) {
+        if (!dragging) return;
+        dragging.classList.remove('dragging');
+        const dRect = dragging.getBoundingClientRect();
+        const potRect = pot.getBoundingClientRect();
+
+        // Check if dropped inside pot
+        if (dRect.left + dRect.width/2 > potRect.left &&
+            dRect.right - dRect.width/2 < potRect.right &&
+            dRect.bottom > potRect.top + 20) {
+            // Dropped in pot!
+            dragging.remove();
+            count++;
+            document.getElementById('dumplingCount').textContent = count;
+
+            // Show bubbles
+            water.classList.add('boiling');
+            document.querySelectorAll('.bubble').forEach(b => b.style.display = 'block');
+
+            // Show steam
+            steamBox.classList.add('show');
+
+            // All done
+            if (count === 6) {
+                setTimeout(() => {
+                    // Reset for fun
+                    tray.innerHTML = '';
+                    for (let i = 1; i <= 6; i++) {
+                        const newD = document.createElement('div');
+                        newD.className = 'dumpling';
+                        newD.setAttribute('data-id', i);
+                        tray.appendChild(newD);
+                    }
+                    count = 0;
+                    document.getElementById('dumplingCount').textContent = '0';
+                    water.classList.remove('boiling');
+                    steamBox.classList.remove('show');
+                    document.querySelectorAll('.bubble').forEach(b => b.style.display = 'none');
+                }, 2000);
+            }
+        } else {
+            // Snap back
+            dragging.style.position = '';
+            dragging.style.left = '';
+            dragging.style.top = '';
+            dragging.style.zIndex = '';
+        }
+        dragging = null;
+    }
+
+    document.addEventListener('mousedown', startDrag);
+    document.addEventListener('mousemove', moveDrag);
+    document.addEventListener('mouseup', endDrag);
+    document.addEventListener('touchstart', startDrag, { passive:false });
+    document.addEventListener('touchmove', moveDrag, { passive:false });
+    document.addEventListener('touchend', endDrag);
+})();
+
+// ===== SPIN WHEEL =====
+let spinning = false;
+const items = ['红油水饺 ¥15', '清汤水饺 ¥14', '红油抄手 ¥16', '钟水饺拼盘 ¥38', '复制酱油 ¥18/瓶', '再来一碗红油水饺！'];
+function spinWheel() {
+    if (spinning) return;
+    spinning = true;
+    const wheel = document.getElementById('wheel');
+    const result = document.getElementById('wheelResult');
+
+    // Random angle: 3-6 full rotations + random
+    const extraDeg = Math.floor(Math.random() * 360);
+    const fullTurns = (3 + Math.floor(Math.random() * 3)) * 360;
+    const total = fullTurns + extraDeg;
+
+    wheel.style.transform = `rotate(${total}deg)`;
+    result.classList.remove('show');
+
+    setTimeout(() => {
+        // Calculate which segment (each 60deg, pointer at top=0deg)
+        const finalAngle = (360 - (extraDeg % 360)) % 360;
+        const idx = Math.floor(finalAngle / 60) % 6;
+        result.textContent = '🎯 ' + items[idx];
+        result.classList.add('show');
+        spinning = false;
+    }, 3200);
+}
+</script>
+</body>
+</html>
